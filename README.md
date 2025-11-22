@@ -1,5 +1,74 @@
 # 🔬 Open Deep Research
 
+## Python Library Usage (DeepResearchClient)
+
+In addition to running via LangGraph Studio or hosted deployments, you can use
+Open Deep Research directly from Python code using the high-level
+`DeepResearchClient` API.
+
+### Installation
+
+You can install the kit directly from this GitHub repository using `pip`:
+
+```bash
+pip install "git+https://github.com/MichalGow/Open-Deep-Research-Kit.git"
+```
+
+This installs the Python package named `open_deep_research`, which you can use
+to create a research client:
+
+```python
+from pathlib import Path
+from open_deep_research.client import DeepResearchClient
+
+client = DeepResearchClient(
+    # Where to store results (prompt, report, metadata, full_state.json)
+    output_base_dir=Path("result"),
+
+    # Either provide a direct OpenAI key ...
+    # openai_api_key="sk-...",
+
+    # ... or configure OpenRouter-style usage
+    openrouter_api_key="sk-or-...",
+    openrouter_model="moonshotai/kimi-k2-0905",
+
+    # Optional: Tavily search key
+    tavily_api_key="tvly-...",
+
+    # Optional: tune summarization behavior for slow models
+    summarization_timeout_seconds=180,
+    summarization_max_attempts=2,
+
+    # Optional: control logging to stdout ("none" to disable)
+    # Available levels: "minimal", "tools", "verbose", "none"
+    log_level="tools",
+)
+
+result = client.run("What is LangChain?")
+
+print(result.final_report)
+print(result.metadata.get("models"))
+print("Results written to:", result.output_dir)
+```
+
+`DeepResearchClient`:
+
+- **Accepts API keys and model overrides as constructor arguments** instead of
+  reading `.env` files directly.
+- **Supports OpenRouter** by mapping `openrouter_api_key` and
+  `openrouter_model` to the underlying OpenAI-compatible client.
+- **Writes structured outputs** (prompt, final report, metadata, full graph
+  state) into timestamped subfolders under `output_base_dir`.
+- **Emits logs to stdout** controlled via `log_level`:
+  - `"minimal"` – start/end summary only.
+  - `"tools"` – start/end + tool-level logs (default).
+  - `"verbose"` – tools + per-node progress updates.
+  - `"none"` – no library logging.
+
+See `src/open_deep_research/client.py` for more details.
+
+---
+
 <img width="1388" height="298" alt="full_diagram" src="https://github.com/user-attachments/assets/12a2371b-8be2-4219-9b48-90503eb43c69" />
 
 Deep research has broken out as one of the most popular agent applications. This is a simple, configurable, fully open source deep research agent that works across many model providers, search tools, and MCP servers. It's performance is on par with many popular deep research agents ([see Deep Research Bench leaderboard](https://huggingface.co/spaces/Ayanami0730/DeepResearch-Leaderboard)).
@@ -12,7 +81,7 @@ Deep research has broken out as one of the most popular agent applications. This
 
 **August 7, 2025**: Added GPT-5 and updated the Deep Research Bench evaluation w/ GPT-5 results.
 
-**August 2, 2025**: Achieved #6 ranking on the [Deep Research Bench Leaderboard](https://huggingface.co/spaces/Ayanami0730/DeepResearch-Leaderboard) with an overall score of 0.4344. 
+**August 2, 2025**: Achieved #6 ranking on the [Deep Research Bench Leaderboard](https://huggingface.co/spaces/Ayanami0730/DeepResearch-Leaderboard) with an overall score of 0.4344.
 
 **July 30, 2025**: Read about the evolution from our original implementations to the current version in our [blog post](https://rlancemartin.github.io/2025/07/30/bitter_lesson/).
 
@@ -61,7 +130,7 @@ Ask a question in the `messages` input field and click `Submit`. Select differen
 
 #### LLM :brain:
 
-Open Deep Research supports a wide range of LLM providers via the [init_chat_model() API](https://python.langchain.com/docs/how_to/chat_models_universal_init/). It uses LLMs for a few different tasks. See the below model fields in the [configuration.py](https://github.com/langchain-ai/open_deep_research/blob/main/src/open_deep_research/configuration.py) file for more details. This can be accessed via the LangGraph Studio UI. 
+Open Deep Research supports a wide range of LLM providers via the [init_chat_model() API](https://python.langchain.com/docs/how_to/chat_models_universal_init/). It uses LLMs for a few different tasks. See the below model fields in the [configuration.py](https://github.com/langchain-ai/open_deep_research/blob/main/src/open_deep_research/configuration.py) file for more details. This can be accessed via the LangGraph Studio UI.
 
 - **Summarization** (default: `openai:gpt-4.1-mini`): Summarizes search API results
 - **Research** (default: `openai:gpt-4.1`): Power the search agent
@@ -74,11 +143,11 @@ Open Deep Research supports a wide range of LLM providers via the [init_chat_mod
 
 #### Search API :mag:
 
-Open Deep Research supports a wide range of search tools. By default it uses the [Tavily](https://www.tavily.com/) search API. Has full MCP compatibility and work native web search for Anthropic and OpenAI. See the `search_api` and `mcp_config` fields in the [configuration.py](https://github.com/langchain-ai/open_deep_research/blob/main/src/open_deep_research/configuration.py) file for more details. This can be accessed via the LangGraph Studio UI. 
+Open Deep Research supports a wide range of search tools. By default it uses the [Tavily](https://www.tavily.com/) search API. Has full MCP compatibility and work native web search for Anthropic and OpenAI. See the `search_api` and `mcp_config` fields in the [configuration.py](https://github.com/langchain-ai/open_deep_research/blob/main/src/open_deep_research/configuration.py) file for more details. This can be accessed via the LangGraph Studio UI.
 
-#### Other 
+#### Other
 
-See the fields in the [configuration.py](https://github.com/langchain-ai/open_deep_research/blob/main/src/open_deep_research/configuration.py) for various other settings to customize the behavior of Open Deep Research. 
+See the fields in the [configuration.py](https://github.com/langchain-ai/open_deep_research/blob/main/src/open_deep_research/configuration.py) for various other settings to customize the behavior of Open Deep Research.
 
 ### 📊 Evaluation
 
@@ -103,7 +172,7 @@ python tests/extract_langsmith_data.py --project-name "YOUR_EXPERIMENT_NAME" --m
 
 This creates `tests/expt_results/deep_research_bench_model-name.jsonl` with the required format. Move the generated JSONL file to a local clone of the Deep Research Bench repository and follow their [Quick Start guide](https://github.com/Ayanami0730/deep_research_bench?tab=readme-ov-file#quick-start) for evaluation submission.
 
-#### Results 
+#### Results
 
 | Name | Commit | Summarization | Research | Compression | Total Cost | Total Tokens | RACE Score | Experiment |
 |------|--------|---------------|----------|-------------|------------|--------------|------------|------------|
@@ -119,8 +188,8 @@ This creates `tests/expt_results/deep_research_bench_model-name.jsonl` with the 
 Follow the [quickstart](#-quickstart) to start LangGraph server locally and test the agent out on LangGraph Studio.
 
 #### Hosted deployment
- 
-You can easily deploy to [LangGraph Platform](https://langchain-ai.github.io/langgraph/concepts/#deployment-options). 
+
+You can easily deploy to [LangGraph Platform](https://langchain-ai.github.io/langgraph/concepts/#deployment-options).
 
 #### Open Agent Platform
 
@@ -142,7 +211,7 @@ The `src/legacy/` folder contains two earlier implementations that provide alter
 - **Interactive Control**: Allows feedback and approval of report plans
 - **Quality Focused**: Emphasizes accuracy through iterative refinement
 
-#### 2. Multi-Agent Implementation (`legacy/multi_agent.py`)  
+#### 2. Multi-Agent Implementation (`legacy/multi_agent.py`)
 - **Supervisor-Researcher Architecture**: Coordinated multi-agent system
 - **Parallel Processing**: Multiple researchers work simultaneously
 - **Speed Optimized**: Faster report generation through concurrency
